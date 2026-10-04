@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Full Spectrum AI Coach — Interview Practice Companion</title>
+<style>
+  :root{
+    --bg:#0b0e14; --panel:#12161f; --panel2:#161b27; --line:#232a3a;
+    --text:#e8edf5; --muted:#9aa4b8; --accent:#37e0a0; --accent2:#4da3ff;
+    --warn:#ffcf5c; --bad:#ff7a7a; --bubble-bot:#151b29; --bubble-user:#173a2e;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Inter,sans-serif;
+    display:flex; flex-direction:column; min-height:100vh;
+  }
+  header{
+    position:sticky; top:0; z-index:5;
+    background:rgba(11,14,20,.92); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line); padding:10px 16px;
+  }
+  .head-top{display:flex; align-items:center; justify-content:space-between; gap:12px; max-width:860px; margin:0 auto}
+  .brand{font-weight:800; letter-spacing:.4px; font-size:15px}
+  .brand .bolt{color:var(--accent)}
+  .backlink{color:var(--muted); text-decoration:none; font-size:13px; white-space:nowrap}
+  .backlink:hover{color:var(--text)}
+  .progress-wrap{max-width:860px; margin:8px auto 0}
+  .progress-meta{display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-bottom:6px}
+  .progress-bar{height:6px; background:var(--panel2); border-radius:99px; overflow:hidden}
+  .progress-fill{height:100%; width:0%; background:linear-gradient(90deg,var(--accent),var(--accent2)); transition:width .4s ease}
+  main{flex:1; width:100%; max-width:860px; margin:0 auto; padding:16px 14px 140px; display:flex; flex-direction:column}
+  /* mode select */
+  .hero{text-align:center; margin:26px 0 18px}
+  .hero h1{font-size:26px; margin:0 0 8px}
+  .hero h1 .bolt{color:var(--accent)}
+  .hero p{color:var(--muted); margin:0 auto; max-width:560px; line-height:1.55; font-size:14.5px}
+  .mode-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:12px; margin-top:22px}
+  .mode-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px;
+    cursor:pointer; text-align:left; color:var(--text); transition:transform .12s ease, border-color .12s ease;
+  }
+  .mode-card:hover{transform:translateY(-2px); border-color:var(--accent)}
+  .mode-card .icon{font-size:26px}
+  .mode-card h3{margin:10px 0 6px; font-size:16px}
+  .mode-card p{margin:0; color:var(--muted); font-size:13px; line-height:1.5}
+  .mode-card .tag{display:inline-block; margin-top:10px; font-size:11px; color:var(--accent); border:1px solid var(--accent); border-radius:99px; padding:2px 10px}
+  .disclaimer{margin-top:26px; font-size:12px; color:var(--muted); text-align:center; line-height:1.6}
+  /* chat */
+  #messages{display:flex; flex-direction:column; gap:10px}
+  .msg{max-width:82%; padding:11px 14px; border-radius:14px; line-height:1.55; font-size:14.5px; white-space:pre-wrap; word-wrap:break-word}
+  .msg.bot{background:var(--bubble-bot); border:1px solid var(--line); align-self:flex-start; border-top-left-radius:4px}
+  .msg.user{background:var(--bubble-user); border:1px solid #1f5245; align-self:flex-end; border-top-right-radius:4px}
+  .msg .who{display:block; font-size:11px; color:var(--muted); margin-bottom:5px; letter-spacing:.4px; text-transform:uppercase}
+  .typing{display:inline-flex; gap:5px; padding:4px 2px}
+  .typing span{width:8px; height:8px; border-radius:50%; background:var(--muted); animation:blink 1.2s infinite}
+  .typing span:nth-child(2){animation-delay:.2s} .typing span:nth-child(3){animation-delay:.4s}
+  @keyframes blink{0%,60%,100%{opacity:.25}30%{opacity:1}}
+  .feedback{border-left:3px solid var(--accent); padding-left:10px; margin:8px 0}
+  .feedback .fline{display:flex; gap:8px; align-items:flex-start; margin:5px 0; font-size:13.5px}
+  .badge{flex:none; width:22px; height:22px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:700}
+  .b-strong{background:#123d2c; color:var(--accent); border:1px solid var(--accent)}
+  .b-partial{background:#3d2f10; color:var(--warn); border:1px solid var(--warn)}
+  .b-missed{background:#3d1414; color:var(--bad); border:1px solid var(--bad)}
+  .coach{margin-top:10px; font-size:13px; color:var(--muted); background:var(--panel2); border:1px dashed var(--line); border-radius:10px; padding:9px 12px}
+  .coach b{color:var(--accent2)}
+  .score-line{font-size:13px; color:var(--muted); margin-top:8px}
+  .score-line b{color:var(--text)}
+  /* input dock */
+  .dock{
+    position:fixed; bottom:0; left:0; right:0; z-index:5;
+    background:rgba(11,14,20,.94); backdrop-filter:blur(8px);
+    border-top:1px solid var(--line); padding:10px 14px 14px;
+  }
+  .dock-inner{max-width:860px; margin:0 auto}
+  .chips{display:flex; gap:8px; overflow-x:auto; padding-bottom:8px; scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{
+    flex:none; font-size:13px; color:var(--text); background:var(--panel2);
+    border:1px solid var(--line); border-radius:99px; padding:7px 14px; cursor:pointer;
+  }
+  .chip:hover{border-color:var(--accent2); color:#fff}
+  .chip:disabled{opacity:.4; cursor:default}
+  .input-row{display:flex; gap:8px}
+  #input{
+    flex:1; background:var(--panel); color:var(--text); border:1px solid var(--line);
+    border-radius:12px; padding:12px 14px; font-size:15px; outline:none; resize:none; max-height:120px;
+  }
+  #input:focus{border-color:var(--accent)}
+  #send{
+    background:var(--accent); color:#06281b; border:none; border-radius:12px;
+    padding:0 20px; font-size:15px; font-weight:800; cursor:pointer;
+  }
+  #send:hover{filter:brightness(1.08)}
+  #send:disabled{opacity:.45; cursor:default}
+  /* summary */
+  .summary-card{background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:22px; margin-top:10px}
+  .summary-card h2{margin:0 0 4px}
+  .summary-card .sub{color:var(--muted); font-size:13.5px; margin-bottom:16px}
+  table{width:100%; border-collapse:collapse; font-size:13.5px; margin-bottom:16px}
+  th,td{text-align:left; padding:8px 6px; border-bottom:1px solid var(--line)}
+  th{color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.5px}
+  .theme-list{margin:0; padding-left:20px; color:var(--muted); font-size:13.5px; line-height:1.7}
+  .theme-list b{color:var(--text)}
+  .btn-row{display:flex; gap:10px; margin-top:18px; flex-wrap:wrap}
+  .btn{
+    border:1px solid var(--line); background:var(--panel2); color:var(--text);
+    border-radius:12px; padding:11px 18px; font-size:14px; cursor:pointer; text-decoration:none; display:inline-block;
+  }
+  .btn:hover{border-color:var(--accent)}
+  .btn.primary{background:var(--accent); color:#06281b; border:none; font-weight:800}
+  .hidden{display:none!important}
+  @media (max-width:560px){
+    .msg{max-width:92%}
+    .hero h1{font-size:22px}
+    main{padding-bottom:160px}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="head-top">
+    <div class="brand"><span class="bolt">⚡</span> FULL SPECTRUM · AI COACH</div>
+    <a class="backlink" href="../">← Back to bootcamp</a>
+  </div>
+  <div class="progress-wrap hidden" id="progressWrap">
+    <div class="progress-meta">
+      <span id="progressLabel">Session</span>
+      <span id="progressCount">0 / 0</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+</header>
+
+<main>
+  <!-- MODE SELECT -->
+  <section id="modeScreen">
+    <div class="hero">
+      <h1><span class="bolt">⚡</span> Full Spectrum AI Coach</h1>
+      <p>Your interview sparring partner. Pick a practice mode, answer out loud in your head (or type it like you mean it), and get sharp, honest feedback after every round — strengths, gaps, and the model points you should have hit.</p>
+    </div>
+    <div class="mode-grid" id="modeGrid"></div>
+    <p class="disclaimer">Feedback is keyword-based coaching, not an AI judge. No answers are sent anywhere — everything runs locally in your browser. Answer in your own words; the coach never invents facts for you.</p>
+  </section>
+
+  <!-- CHAT -->
+  <section id="chatScreen" class="hidden">
+    <div id="messages"></div>
+  </section>
+
+  <!-- SUMMARY -->
+  <section id="summaryScreen" class="hidden">
+    <div class="summary-card">
+      <h2>Session debrief ⚡</h2>
+      <div class="sub" id="summarySub"></div>
+      <div id="summaryBody"></div>
+      <div class="btn-row">
+        <button class="btn primary" id="againBtn">Run it back</button>
+        <a class="btn" href="../">Back to bootcamp</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="dock hidden" id="dock">
+  <div class="dock-inner">
+    <div class="chips" id="chips"></div>
+    <div class="input-row">
+      <textarea id="input" rows="1" placeholder="Type your answer…"></textarea>
+      <button id="send">Send</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   FULL SPECTRUM AI COACH — practice companion
+   All logic client-side. No network calls. No invented facts.
+   ============================================================ */
+
+/* ---------------- Question bank (24) ---------------- */
+var QB = [
+/* ===== TECHNICAL — IT support troubleshooting ===== */
+{domain:"technical", q:"A user says their laptop connects to Wi-Fi at home but not in the office, while their coworkers' laptops work fine. Walk me through your troubleshooting steps.",
+ hint:"Think: what's different about THIS machine vs the others, and what's different about the office network vs home?",
+ keyPoints:[
+  {label:"Isolate scope (one machine vs network)", keywords:["only","machine","their","laptop","coworker","scope","isolate","specific","one"]},
+  {label:"Check wireless profile/adapter basics", keywords:["adapter","driver","wifi","wi-fi","network","profile","forget","reconnect","signal"]},
+  {label:"Layered checks: IP/DNS/gateway, auth", keywords:["ip","dhcp","dns","gateway","address","authenticat","credential","certificate"]},
+  {label:"Verify the fix + document", keywords:["verify","confirm","test","document","ticket","resolve","working"]}],
+ followups:["What if ipconfig showed a 169.254.x.x address — what would that tell you?","What would you check if the user's VPN client was also involved?"],
+ tip:"Troubleshoot like a technician: narrow the scope first, work bottom-up through the layers, and always verify + document the fix."},
+{domain:"technical", q:"A computer shows a black screen with a cursor after a Windows update. The user is panicking because they have a deadline. What do you do first, and what's your recovery plan?",
+ hint:"Separate the people problem from the technical problem — then think boot options and rollback.",
+ keyPoints:[
+  {label:"Calm the user, set expectations", keywords:["calm","reassure","expectation","deadline","communicat","user"]},
+  {label:"Attempt safe mode / recovery options", keywords:["safe mode","recovery","winre","startup","boot","advanced"]},
+  {label:"Rollback or restore point", keywords:["rollback","restore","uninstall","update","system restore","point"]},
+  {label:"Escalate comms + backup data if needed", keywords:["backup","data","escalat","communicat","deadline","loaner","spare"]}],
+ followups:["If safe mode works but normal boot doesn't, what does that suggest?","When would you decide to reimage instead of keep troubleshooting?"],
+ tip:"In a crisis, sequence matters: stabilize the human, stabilize the machine (least-destructive first), protect the data."},
+{domain:"technical", q:"A network printer shows as offline for one department but online for everyone else. How do you diagnose it?",
+ hint:"Same question as always: what's shared, what's unique? Follow the print path.",
+ keyPoints:[
+  {label:"Trace the print path (client → server → printer)", keywords:["server","queue","spooler","driver","print server","path","share"]},
+  {label:"Check what's unique to that department", keywords:["department","subnet","vlan","group policy","gpo","scope","unique"]},
+  {label:"Restart/clear spooler or re-add printer", keywords:["spooler","restart","clear","reinstall","re-add","queue"]},
+  {label:"Test from another machine in that dept", keywords:["test","another","machine","verify","confirm"]}],
+ followups:["How would your answer change if it were a direct-IP printer instead of a print server?","What would you check in Group Policy?"],
+ tip:"Name the full path of the failing service, then binary-search it: which hop is broken?" },
+{domain:"technical", q:"A user forwards you a suspicious email asking them to reset their password via a link. What are your immediate actions?",
+ hint:"Think like security: contain, verify, report — in that order.",
+ keyPoints:[
+  {label:"Tell user not to click / contain", keywords:["click","not","link","delete","quarantine","contain","do not"]},
+  {label:"Verify headers / report to security", keywords:["header","report","phishing","security","soc","abuse","submit"]},
+  {label:"Check if credentials were entered", keywords:["entered","compromised","password","reset","credential","account"]},
+  {label:"Educate user briefly", keywords:["educat","train","awareness","verify","sender","hover","future"]}],
+ followups:["If the user already clicked and entered credentials, what changes?","What would you do if ten users got the same email?"],
+ tip:"Security incidents are containment first, forensics second, education always."},
+{domain:"technical", q:"Multiple users report their computers are suddenly slow. Ticket volume is climbing. What's your approach?",
+ hint:"One slow machine is a ticket. Many slow machines is an incident — think broader.",
+ keyPoints:[
+  {label:"Check for common cause (updates, network, server)", keywords:["common","update","patch","network","server","widespread","cause"]},
+  {label:"Correlate: timing, scope, recent changes", keywords:["timing","scope","change","recent","correlate","when","started"]},
+  {label:"Triage: gather data, set up comms", keywords:["triage","communicat","status","priorit","data","collect"]},
+  {label:"Escalate if systemic", keywords:["escalat","incident","major","team","outage"]}],
+ followups:["What metrics would you pull to confirm a common cause?","At what point does this become a major incident?"],
+ tip:"Pattern-match across tickets: same symptom + same time = shared cause until proven otherwise."},
+{domain:"technical", q:"A user can't access a shared drive folder they need for their job. Their manager says they should have access. Walk through your resolution.",
+ hint:"Access problems are identity + permission + path. Which one is it?",
+ keyPoints:[
+  {label:"Verify identity and group membership", keywords:["group","member","permission","access","ad","active directory","identity"]},
+  {label:"Check share vs NTFS permissions", keywords:["share","ntfs","permission","effective","access","acl"]},
+  {label:"Confirm manager approval / ticket trail", keywords:["approv","manager","ticket","request","authoriz","trail"]},
+  {label:"Test access with user present", keywords:["test","verify","confirm","user","working"]}],
+ followups:["What if the group shows them as a member but access still fails?","How do you handle a request with no manager approval?"],
+ tip:"Never grant access on a verbal say-so: approval trail first, least privilege always."},
+
+/* ===== SITUATIONAL — workplace judgment ===== */
+{domain:"situational", q:"You're deep in a critical server issue when an angry executive walks up demanding you fix their email immediately. How do you handle it?",
+ hint:"Both are real. The skill is in how you sequence and communicate, not in choosing one to ignore.",
+ keyPoints:[
+  {label:"Acknowledge without abandoning current work", keywords:["acknowledge","understand","listen","hear","valid"]},
+  {label:"Assess urgency and triage", keywords:["triage","urgent","priority","assess","critical","impact"]},
+  {label:"Communicate a plan + timeline", keywords:["plan","timeline","communicat","update","when","follow"]},
+  {label:"Delegate or escalate if needed", keywords:["delegat","escalat","colleague","teammate","help"]}],
+ followups:["What exact words would you say to de-escalate?","What if their email issue turned out to be the bigger outage?"],
+ tip:"De-escalation = acknowledge the emotion, address the problem, own the timeline."},
+{domain:"situational", q:"You notice a coworker routinely bypassing the VPN requirement to 'work faster' from coffee shops. What do you do?",
+ hint:"Security policy vs. team harmony — think about your duty to the organization first.",
+ keyPoints:[
+  {label:"Recognize the security risk", keywords:["risk","security","policy","vulnerab","exposure","threat"]},
+  {label:"Talk to the coworker directly first", keywords:["talk","direct","conversation","coworker","privately","discuss"]},
+  {label:"Escalate to manager/security if it continues", keywords:["escalat","manager","report","security","continue"]},
+  {label:"Document what you observed", keywords:["document","record","note","observed"]}],
+ followups:["What if the coworker is your friend?","What if their manager already knows and doesn't care?"],
+ tip:"Integrity questions test whether you'll do the right thing when it's socially costly."},
+{domain:"situational", q:"Two managers both tell you their request is the top priority, and both are due today. How do you decide what to do?",
+ hint:"You don't have to pick a winner alone — there's a process for this.",
+ keyPoints:[
+  {label:"Get both requests in writing with impact", keywords:["impact","business","writing","document","clarify","scope"]},
+  {label:"Escalate prioritization to shared leadership", keywords:["escalat","manager","leadership","decide","prioritiz","together"]},
+  {label:"Communicate tradeoffs to both", keywords:["communicat","tradeoff","timeline","realistic","expectation"]},
+  {label:"Don't silently drop one", keywords:["drop","ignore","silent","transparent","both"]}],
+ followups:["What if neither manager will back down?","How do you say no without damaging the relationship?"],
+ tip:"Prioritization conflicts are resolved by impact and authority — not by who asked loudest."},
+{domain:"situational", q:"You realize a change YOU made last night caused this morning's outage. Nobody knows it was you yet. What's your next move?",
+ hint:"This is a character question. The technically perfect answer is useless without the honest one.",
+ keyPoints:[
+  {label:"Own it immediately", keywords:["own","admit","responsib","mistake","my fault","honest"]},
+  {label:"Help fix/rollback first", keywords:["fix","rollback","revert","restore","help","resolve"]},
+  {label:"Disclose through proper channels", keywords:["disclose","report","manager","incident","postmortem","transparent"]},
+  {label:"Prevent recurrence (process fix)", keywords:["prevent","process","change control","review","lesson","recurrence"]}],
+ followups:["What goes in the postmortem for this?","How do you rebuild trust after causing an outage?"],
+ tip:"Own fast, fix first, then harden the process. Blameless culture starts with personal accountability."},
+{domain:"situational", q:"A user asks you to install unlicensed software on their work laptop 'just this once — nobody will know.' How do you respond?",
+ hint:"Policy is policy, but the delivery matters — you're protecting them too.",
+ keyPoints:[
+  {label:"Decline clearly, cite policy/licensing", keywords:["decline","policy","license","compliance","cannot","legal"]},
+  {label:"Explain the risk to them", keywords:["risk","malware","audit","security","explain","protect"]},
+  {label:"Offer a legitimate alternative", keywords:["alternative","approved","legitimate","option","instead"]},
+  {label:"Document the request", keywords:["document","record","ticket","note"]}],
+ followups:["What if their manager pressures you to do it?","What if it's open-source software — does your answer change?"],
+ tip:"'Just this once' is how audit findings are born. Decline kindly, offer the legal path."},
+{domain:"situational", q:"It's 4:55 PM, your shift ends at 5, and a critical ticket lands with no one to hand it to. What do you do?",
+ hint:"Think about what the user and the business need, not just the clock.",
+ keyPoints:[
+  {label:"Assess severity honestly", keywords:["severity","critical","assess","impact","urgent"]},
+  {label:"Stabilize before leaving", keywords:["stabilize","workaround","mitigat","contain","handoff"]},
+  {label:"Hand off properly in writing", keywords:["handoff","document","ticket","notes","writing","on-call"]},
+  {label:"Stay if truly critical and alone", keywords:["stay","overtime","critical","alone","responsib"]}],
+ followups:["Where's the line between dedication and burnout here?","What does a good handoff note include?"],
+ tip:"Ownership doesn't clock out mid-incident — but a clean handoff is also ownership."},
+
+/* ===== BEHAVIORAL — STAR interview ===== */
+{domain:"behavioral", q:"Tell me about a time you solved a difficult technical problem under pressure.",
+ hint:"Use STAR: Situation, Task, Action, Result — and put numbers on the result.",
+ keyPoints:[
+  {label:"Sets the scene (Situation/Task)", keywords:["situation","context","when","background","task","responsible"]},
+  {label:"Describes specific actions taken", keywords:["action","i did","i ran","i built","i checked","steps","decided"]},
+  {label:"Quantifies the result", keywords:["result","reduced","saved","restored","minutes","percent","%","uptime","outcome"]},
+  {label:"Shows what they learned", keywords:["learned","lesson","next time","improved","takeaway"]}],
+ followups:["What would you do differently if it happened again?","How did others react to your solution?"],
+ tip:"STAR answers live or die on the R — always close with a measurable result."},
+{domain:"behavioral", q:"Describe a time you had to deal with a difficult user or stakeholder. How did you turn it around?",
+ hint:"They want emotional intelligence, not a story about winning an argument.",
+ keyPoints:[
+  {label:"Shows empathy for the other person", keywords:["empathy","understand","frustrat","perspective","listen","felt"]},
+  {label:"Describes de-escalation actions", keywords:["calm","de-escalat","acknowledge","patient","defuse"]},
+  {label:"Explains the resolution", keywords:["resolv","fixed","agreed","solution","outcome"]},
+  {label:"Reflects on the relationship after", keywords:["relationship","after","trust","learned","ongoing"]}],
+ followups:["What did that person teach you about yourself?","Have you used that approach since?"],
+ tip:"Make the difficult person human in your story — and make yourself the one who adapted."},
+{domain:"behavioral", q:"Tell me about a time you had to learn a new technology or skill quickly for the job.",
+ hint:"Show the learning SYSTEM, not just the fact that you learned.",
+ keyPoints:[
+  {label:"Names the skill and the deadline pressure", keywords:["learn","new","quickly","deadline","technology","skill"]},
+  {label:"Describes the learning method", keywords:["lab","documentation","docs","course","practice","mentor","built","experiment"]},
+  {label:"Applies it to a real outcome", keywords:["applied","used","deployed","shipped","implemented","production"]},
+  {label:"Shows ongoing learning habit", keywords:["continue","ongoing","habit","still","since","regularly"]}],
+ followups:["What was the hardest part of ramping up?","How do you stay current now?"],
+ tip:"Interviewers hire learning velocity — prove yours with a method, not just motivation."},
+{domain:"behavioral", q:"Tell me about a time you failed at work. What happened, and what did you change afterward?",
+ hint:"Pick a real failure. The growth is the point — a fake weakness insults their intelligence.",
+ keyPoints:[
+  {label:"Owns a genuine failure", keywords:["fail","mistake","wrong","broke","missed","fault","error"]},
+  {label:"Explains what went wrong honestly", keywords:["because","reason","cause","happened","analysis"]},
+  {label:"Describes the concrete change made", keywords:["changed","now i","process","checklist","review","prevent"]},
+  {label:"Shows the improved outcome", keywords:["since","improved","better","result","worked","outcome"]}],
+ followups:["How did your manager react?","Would you handle the original situation differently today?"],
+ tip:"The failure is 30% of the answer; the system you built afterward is 70%."},
+{domain:"behavioral", q:"Give me an example of a process you improved. What was the before and after?",
+ hint:"Before/after with numbers. Initiative + impact.",
+ keyPoints:[
+  {label:"Describes the painful before-state", keywords:["before","manual","slow","painful","took","waste","problem"]},
+  {label:"Shows initiative (not assigned)", keywords:["noticed","proposed","initiative","suggested","volunteered","idea"]},
+  {label:"Details the improvement made", keywords:["automated","script","built","streamlined","changed","created"]},
+  {label:"Quantifies the after-state", keywords:["after","reduced","saved","faster","hours","percent","%","from","to"]}],
+ followups:["How did you get buy-in for the change?","Did anyone resist it?"],
+ tip:"'I noticed X was wasteful, so I built Y, and it saved Z' — that's the whole formula."},
+{domain:"behavioral", q:"Describe a time you had to deliver under a tight deadline with limited resources.",
+ hint:"Constraints are the story. Show prioritization and creativity.",
+ keyPoints:[
+  {label:"Sets the constraints clearly", keywords:["deadline","limited","tight","constraint","short","pressure"]},
+  {label:"Shows prioritization", keywords:["priorit","scope","cut","focus","essential","triage"]},
+  {label:"Describes creative problem-solving", keywords:["creative","workaround","leveraged","reused","alternative","improvised"]},
+  {label:"Delivers the outcome honestly", keywords:["delivered","shipped","met","outcome","result","launched"]}],
+ followups:["What did you cut, and how did you decide?","How did the team hold up?"],
+ tip:"Tight-deadline stories prove judgment: what you protected, what you cut, and why."},
+
+/* ===== COGNITIVE — quick reasoning drills ===== */
+{domain:"cognitive", q:"Four tickets arrive at once: (A) CEO can't print a boarding pass, flight in 40 min; (B) 30 users can't reach the file server; (C) one user forgot their password; (D) a printer is low on toner. What order do you work them, and why?",
+ hint:"Two axes: impact (how many affected) and urgency (time sensitivity).",
+ keyPoints:[
+  {label:"B first or tied-first (widest impact)", keywords:["b","server","30","impact","users","widest","outage"]},
+  {label:"A high (time-critical single user)", keywords:["a","ceo","flight","time","critical","boarding","40"]},
+  {label:"C quick win (low effort)", keywords:["c","password","quick","reset","easy","fast"]},
+  {label:"D last (non-urgent)", keywords:["d","toner","last","low","non-urgent","later"]}],
+ followups:["What if the CEO's issue was actually caused by the same file-server outage?","How do you communicate your order to the waiting users?"],
+ tip:"Prioritization = impact × urgency, minus effort. Say the formula out loud."},
+{domain:"cognitive", q:"A 500-person company averages one password reset request per user every 2 months, and each reset takes a technician 10 minutes. Roughly how many technician-hours per month go to password resets?",
+ hint:"Fermi-style: work it step by step, state your assumptions. Precision matters less than the method.",
+ keyPoints:[
+  {label:"Computes resets/month (250)", keywords:["250","500","2","month","divide","per month"]},
+  {label:"Converts to hours (~42)", keywords:["42","40","41","43","hours","10 minutes","600"]},
+  {label:"Shows the work step by step", keywords:["step","first","then","so","equals","=","calculate"]},
+  {label:"Sanity-checks the answer", keywords:["roughly","about","around","check","reasonable","sanity","week"]}],
+ followups:["What assumption in that chain is weakest?","If self-service cut resets by 70%, what would you do with the freed time?"],
+ tip:"Fermi answers: state assumptions, show arithmetic, sanity-check the magnitude."},
+{domain:"cognitive", q:"Complete the pattern: 2, 6, 12, 20, 30, __. Explain your reasoning.",
+ hint:"Look at the differences between consecutive numbers.",
+ keyPoints:[
+  {label:"Identifies growing differences (+4,+6,+8,+10)", keywords:["difference","4","6","8","10","gap","increase"]},
+  {label:"Predicts next difference (+12)", keywords:["12","next","plus"]},
+  {label:"Answers 42", keywords:["42"]},
+  {label:"Offers the formula (n²+n)", keywords:["formula","n","squared","n(n+1)","pattern","rule"]}],
+ followups:["What would the 10th term be?","Can you think of a second valid rule that fits?"],
+ tip:"Patterns: check differences first, then ratios, then formulas. Narrate as you go."},
+{domain:"cognitive", q:"Three users report: one can't reach the internet, one can't reach the intranet, one can't reach either. All are on the same floor. What's your leading hypothesis, and how do you test it?",
+ hint:"Map the symptoms to network layers — what's shared between all three vs. unique to each.",
+ keyPoints:[
+  {label:"Maps symptoms to scope (shared vs unique)", keywords:["shared","scope","unique","symptom","map","layer"]},
+  {label:"Hypothesizes floor switch / VLAN issue", keywords:["switch","vlan","floor","uplink","port","network"]},
+  {label:"Proposes a discriminating test", keywords:["test","ping","traceroute","another","check","verify","isolate"]},
+  {label:"Considers DNS vs routing split", keywords:["dns","routing","route","gateway","resolve"]}],
+ followups:["What single test would rule out the switch fastest?","What if the three users were on different floors?"],
+ tip:"Diagnosis is hypothesis + cheapest discriminating test. Never shotgun fixes."},
+{domain:"cognitive", q:"A helpdesk gets 120 tickets per day across an 8-hour shift. Average handle time is 20 minutes. How many technicians are needed at minimum to keep up — and what assumption could break your answer?",
+ hint:"Convert everything to the same unit, then stress-test your own model.",
+ keyPoints:[
+  {label:"Computes total workload (40 hours/day)", keywords:["40","2400","minutes","120","20","total","workload"]},
+  {label:"Divides by shift (5 technicians)", keywords:["5","8","divide","shift","technician"]},
+  {label:"Names a breaking assumption", keywords:["assumption","break","arrival","burst","breaks","lunch","variance","uneven"]},
+  {label:"Notes utilization can't be 100%", keywords:["100%","utilization","buffer","slack","realistic","break"]}],
+ followups:["How does ticket arrival variance change the math?","What would you measure for a week before hiring?"],
+ tip:"Capacity math is easy; the assumptions are the interview. Always name what breaks your model."},
+{domain:"cognitive", q:"A user says 'the system is down.' You check: the app loads, the database responds, but their specific report times out. Where's the most likely problem, and what's your first query-side check?",
+ hint:"'Down' is a user word, not a diagnosis. Narrow from system to query.",
+ keyPoints:[
+  {label:"Reframes 'down' as a scoped symptom", keywords:["scoped","specific","report","not","down","narrow","only"]},
+  {label:"Suspects the query/report, not infra", keywords:["query","report","slow","timeout","data","index"]},
+  {label:"Proposes checking query plan / data growth", keywords:["plan","execution","index","growth","explain","profile","slow query"]},
+  {label:"Suggests reproducing with a smaller scope", keywords:["reproduc","smaller","filter","date","range","test"]}],
+ followups:["What if the report worked fine yesterday?","When do you involve the database team vs. handling it yourself?"],
+ tip:"Translate user language into technical scope before you touch anything."}
+];
+
+/* ---------------- Domain metadata ---------------- */
+var DOMAINS = {
+  technical:  {icon:"🛠️", name:"Technical",      desc:"IT support troubleshooting — think like a technician, narrow the scope, verify the fix.", coach:"Troubleshoot like a pro: narrow scope → check layers bottom-up → verify + document. Always say what you'd test next."},
+  situational:{icon:"🧭", name:"Situational",    desc:"Workplace judgment — de-escalate, protect the business, communicate the plan.", coach:"Situational answers want: acknowledge → assess impact → communicate a plan → escalate/delegate properly. Show character, not just process."},
+  behavioral: {icon:"🎤", name:"Behavioral",     desc:"STAR interview stories — specific actions, measurable results, honest growth.", coach:"STAR every time: Situation/Task brief, Actions specific ('I did…'), Result quantified. The growth after a failure is 70% of the answer."},
+  cognitive:  {icon:"🧠", name:"Cognitive",      desc:"Quick reasoning drills — show your work, state assumptions, sanity-check.", coach:"Reason out loud: state assumptions → show the steps → sanity-check the answer → name what would break your model."}
+};
+var MODES = [
+  {id:"full",       icon:"⚡", name:"Full Spectrum",  desc:"The full gauntlet — 8 questions mixed across all four domains. Maximum coverage.", tag:"8 rounds · all domains"},
+  {id:"technical",  icon:"🛠️", name:"Technical",      desc:DOMAINS.technical.desc,  tag:"6 rounds"},
+  {id:"situational",icon:"🧭", name:"Situational",    desc:DOMAINS.situational.desc, tag:"6 rounds"},
+  {id:"behavioral", icon:"🎤", name:"Behavioral",     desc:DOMAINS.behavioral.desc,  tag:"6 rounds"},
+  {id:"cognitive",  icon:"🧠", name:"Cognitive",      desc:DOMAINS.cognitive.desc,   tag:"6 rounds"}
+];
+
+/* ---------------- Session state ---------------- */
+var session = null;
+
+function shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+
+function buildQueue(mode){
+  var idx = QB.map(function(_,i){return i;});
+  if(mode==="full"){
+    var per = {};
+    idx.forEach(function(i){ var d=QB[i].domain; (per[d]=per[d]||[]).push(i); });
+    var q=[];
+    ["technical","situational","behavioral","cognitive"].forEach(function(d){ q=q.concat(shuffle(per[d]).slice(0,2)); });
+    return shuffle(q);
+  }
+  return shuffle(idx.filter(function(i){ return QB[i].domain===mode; }));
+}
+
+function newStats(){
+  var s={};
+  Object.keys(DOMAINS).forEach(function(d){ s[d]={asked:0, answered:0, strong:0, points:0, themes:{}}; });
+  return s;
+}
+
+/* ---------------- DOM helpers ---------------- */
+function $(id){ return document.getElementById(id); }
+function el(tag, cls, html){ var e=document.createElement(tag); if(cls) e.className=cls; if(html!==undefined) e.innerHTML=html; return e; }
+function scrollBottom(){ window.scrollTo({top:document.body.scrollHeight, behavior:"smooth"}); }
+
+/* ---------------- Rendering: mode select ---------------- */
+function renderModes(){
+  var grid=$("modeGrid"); grid.innerHTML="";
+  MODES.forEach(function(m){
+    var card=el("button","mode-card");
+    card.innerHTML='<div class="icon">'+m.icon+'</div><h3>'+m.name+'</h3><p>'+m.desc+'</p><span class="tag">'+m.tag+'</span>';
+    card.addEventListener("click", function(){ startSession(m.id); });
+    grid.appendChild(card);
+  });
+}
+
+/* ---------------- Chat plumbing ---------------- */
+function showScreen(id){
+  ["modeScreen","chatScreen","summaryScreen"].forEach(function(s){ $(s).classList.add("hidden"); });
+  $(id).classList.remove("hidden");
+  $("dock").classList.toggle("hidden", id!=="chatScreen");
+  $("progressWrap").classList.toggle("hidden", id!=="chatScreen");
+}
+
+function addMsg(who, html){
+  var m=el("div","msg "+who);
+  m.innerHTML='<span class="who">'+(who==="bot"?"⚡ Coach":"You")+'</span>'+html;
+  $("messages").appendChild(m);
+  scrollBottom();
+  return m;
+}
+
+function botSay(html, delayMs, cb){
+  var typing=el("div","msg bot");
+  typing.innerHTML='<span class="who">⚡ Coach</span><span class="typing"><span></span><span></span><span></span></span>';
+  $("messages").appendChild(typing);
+  scrollBottom();
+  setTimeout(function(){
+    typing.remove();
+    addMsg("bot", html);
+    if(cb) cb();
+  }, delayMs==null?900:delayMs);
+}
+
+function escapeHtml(s){
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+/* ---------------- Chips ---------------- */
+function setChips(list){
+  var c=$("chips"); c.innerHTML="";
+  list.forEach(function(item){
+    var b=el("button","chip",item.label);
+    b.addEventListener("click", item.fn);
+    c.appendChild(b);
+  });
+}
+function awaitingChips(){
+  setChips([
+    {label:"💡 Hint", fn:function(){ giveHint(); }},
+    {label:"📖 Model answer", fn:function(){ giveModelAnswer(); }},
+    {label:"⏭ Skip", fn:function(){ skipQuestion(); }},
+    {label:"🏁 End session", fn:function(){ endSession(false); }}
+  ]);
+}
+
+/* ---------------- Session flow ---------------- */
+function startSession(modeId){
+  session={
+    mode:modeId,
+    queue:buildQueue(modeId),
+    pos:0,
+    stats:newStats(),
+    awaiting:false,
+    modelShown:false,
+    hintUsed:false
+  };
+  showScreen("chatScreen");
+  var modeName = modeId==="full" ? "Full Spectrum" : DOMAINS[modeId].name;
+  botSay("Locked in. <b>"+modeName+"</b> mode — "+session.queue.length+" rounds. Answer like it's the real thing: specific, structured, honest. No fluff survives here. ⚡", 700, function(){ askNext(); });
+}
+
+function askNext(){
+  if(session.pos >= session.queue.length){ endSession(true); return; }
+  var q=QB[session.queue[session.pos]];
+  var d=DOMAINS[q.domain];
+  session.awaiting=true; session.modelShown=false; session.hintUsed=false;
+  session.stats[q.domain].asked++;
+  updateProgress();
+  awaitingChips();
+  $("input").focus();
+  var n=session.pos+1, total=session.queue.length;
+  botSay("<b>"+d.icon+" Round "+n+" of "+total+" — "+d.name+":</b><br><br>"+escapeHtml(q.q), 900);
+}
+
+function updateProgress(){
+  var total=session.queue.length;
+  var done=Math.min(session.pos, total);
+  $("progressLabel").textContent = session.mode==="full" ? "Full Spectrum session" : DOMAINS[session.mode].name+" practice";
+  $("progressCount").textContent = done+" / "+total;
+  $("progressFill").style.width = (total? (done/total*100):0)+"%";
+}
+
+/* ---------------- Feedback engine (keyword heuristics) ---------------- */
+function analyze(answer, keyPoints){
+  var text=" "+answer.toLowerCase()+" ";
+  return keyPoints.map(function(kp){
+    var hits=kp.keywords.filter(function(kw){ return text.indexOf(kw.toLowerCase())>-1; });
+    var ratio=kp.keywords.length? hits.length/kp.keywords.length : 0;
+    var verdict = ratio>=0.6 ? "strong" : (hits.length>0 ? "partial" : "missed");
+    return {label:kp.label, verdict:verdict, hits:hits.length, of:kp.keywords.length};
+  });
+}
+
+function feedbackHtml(results){
+  var icons={strong:"✓", partial:"~", missed:"✗"};
+  var html='<div class="feedback">';
+  results.forEach(function(r){
+    html+='<div class="fline"><span class="badge b-'+r.verdict+'">'+icons[r.verdict]+'</span><span>'+escapeHtml(r.label)+' <span style="color:var(--muted)">('+r.hits+'/'+r.of+' cues)</span></span></div>';
+  });
+  html+='</div>';
+  return html;
+}
+
+function recordResults(q, results){
+  var st=session.stats[q.domain];
+  st.answered++; st.points+=q.keyPoints.length;
+  results.forEach(function(r){
+    if(r.verdict==="strong") st.strong++;
+    else st.themes[r.label]=(st.themes[r.label]||0)+1;
+  });
+}
+
+var COACH_OPENERS=[
+  "Debrief time. Here's how that landed:",
+  "Sharp effort. Let's break it down:",
+  "Good reps. Here's the honest read:",
+  "Round complete — here's your debrief:"
+];
+
+function handleAnswer(raw){
+  var answer=(raw||"").trim();
+  if(!session || !session.awaiting || !answer) return;
+  var q=QB[session.queue[session.pos]];
+  session.awaiting=false;
+  setChips([]);
+  addMsg("user", escapeHtml(answer));
+  $("input").value="";
+
+  var wordCount=answer.split(/\s+/).length;
+  var results=analyze(answer, q.keyPoints);
+  recordResults(q, results);
+
+  var strongCount=results.filter(function(r){return r.verdict==="strong";}).length;
+  var total=q.keyPoints.length;
+  var opener=COACH_OPENERS[Math.floor(Math.random()*COACH_OPENERS.length)];
+
+  var verdictLine;
+  if(strongCount===total) verdictLine="<b>Full coverage — "+strongCount+"/"+total+" key points hit.</b> That's the standard. Hold it.";
+  else if(strongCount>=Math.ceil(total/2)) verdictLine="<b>"+strongCount+"/"+total+" key points strong.</b> Solid foundation — the gaps below are your reps for next time.";
+  else verdictLine="<b>"+strongCount+"/"+total+" key points strong.</b> Honest read: this one needs another rep. Study the model points, then run it back.";
+
+  var thin = wordCount<25 ? '<div class="coach">⚠️ <b>Depth check:</b> your answer was only '+wordCount+' words. Interview answers need substance — aim for 60+ words with specifics, not generalities.</div>' : "";
+
+  var followup = (!session.modelShown && q.followups && q.followups.length)
+    ? '<div class="coach">🔥 <b>Follow-up drill:</b> '+escapeHtml(q.followups[Math.floor(Math.random()*q.followups.length)])+'</div>' : "";
+
+  var coachTip='<div class="coach">🎯 <b>'+DOMAINS[q.domain].name+' coaching:</b> '+escapeHtml(DOMAINS[q.domain].coach)+'</div>';
+
+  var html=opener+"<br><br>"+feedbackHtml(results)+'<div class="score-line">'+verdictLine+'</div>'+thin+followup+coachTip;
+
+  botSay(html, 1200, function(){
+    session.pos++;
+    updateProgress();
+    if(session.pos < session.queue.length){
+      botSay("Next round incoming…", 900, function(){ askNext(); });
+    } else {
+      endSession(true);
+    }
+  });
+}
+
+function giveHint(){
+  if(!session || !session.awaiting) return;
+  var q=QB[session.queue[session.pos]];
+  session.hintUsed=true;
+  botSay("💡 <b>Hint:</b> "+escapeHtml(q.hint));
+}
+
+function giveModelAnswer(){
+  if(!session) return;
+  var q=QB[session.queue[session.pos]];
+  session.modelShown=true;
+  var html="📖 <b>Model points for this question</b> — a strong answer touches all of these:<br><br>";
+  q.keyPoints.forEach(function(kp,i){ html+=""+(i+1)+". "+escapeHtml(kp.label)+"<br>"; });
+  html+='<br><div class="coach">Use these as a checklist, then answer in your own words — or hit <b>⏭ Skip</b> to move on.</div>';
+  botSay(html);
+  if(session.awaiting) awaitingChips();
+}
+
+function skipQuestion(){
+  if(!session || !session.awaiting) return;
+  var q=QB[session.queue[session.pos]];
+  session.awaiting=false;
+  setChips([]);
+  var st=session.stats[q.domain];
+  st.answered++;
+  st.points+=q.keyPoints.length;
+  q.keyPoints.forEach(function(kp){ st.themes[kp.label]=(st.themes[kp.label]||0)+1; });
+  botSay("Skipped — no shame, but the gap is logged. The model points for this one:<br><br>"+
+    q.keyPoints.map(function(kp,i){return (i+1)+". "+escapeHtml(kp.label);}).join("<br>"), 700, function(){
+      session.pos++; updateProgress();
+      if(session.pos < session.queue.length) askNext(); else endSession(true);
+    });
+}
+
+/* ---------------- Summary ---------------- */
+function endSession(completed){
+  if(!session) return;
+  session.awaiting=false;
+  setChips([]);
+  var s=session.stats, totalStrong=0, totalPoints=0, totalAnswered=0, totalAsked=0;
+  var themeAgg={};
+  var rows="";
+  Object.keys(DOMAINS).forEach(function(d){
+    var st=s[d];
+    totalStrong+=st.strong; totalPoints+=st.points; totalAnswered+=st.answered; totalAsked+=st.asked;
+    Object.keys(st.themes).forEach(function(t){ themeAgg[t]=(themeAgg[t]||0)+st.themes[t]; });
+    if(st.asked===0) return;
+    var pct=st.points? Math.round(st.strong/st.points*100):0;
+    rows+="<tr><td>"+DOMAINS[d].icon+" "+DOMAINS[d].name+"</td><td>"+st.answered+"/"+st.asked+"</td><td>"+st.strong+"/"+st.points+"</td><td>"+pct+"%</td></tr>";
+  });
+  var overall=totalPoints? Math.round(totalStrong/totalPoints*100):0;
+  var themes=Object.keys(themeAgg).sort(function(a,b){return themeAgg[b]-themeAgg[a];}).slice(0,5);
+
+  var rating = overall>=80 ? "⚡ Full spectrum dominance. You're interview-ready — keep the reps sharp."
+    : overall>=60 ? "Strong trajectory. Tighten the themes below and run it back."
+    : overall>=40 ? "Foundation is forming. Drill the themes below — that's your training plan."
+    : "Early reps logged — that's how everyone starts. Hit the themes below, then run it back.";
+
+  $("summarySub").textContent=(completed?"Session complete":"Session ended early")+" — "+totalAnswered+" answered · "+overall+"% key-point coverage overall.";
+  var html='<table><tr><th>Domain</th><th>Answered</th><th>Strong pts</th><th>Coverage</th></tr>'+rows+'</table>';
+  html+="<h3 style='margin:0 0 8px'>Top improvement themes</h3>";
+  if(themes.length){
+    html+='<ul class="theme-list">'+themes.map(function(t){return "<li><b>"+escapeHtml(t)+"</b> — missed or partial "+themeAgg[t]+"×</li>";}).join("")+"</ul>";
+  } else {
+    html+='<p style="color:var(--muted)">No weak themes — clean sweep. Go dominate the real thing. ⚡</p>';
+  }
+  html+='<p style="margin-top:14px; font-size:14px">'+rating+'</p>';
+  $("summaryBody").innerHTML=html;
+  showScreen("summaryScreen");
+  session=null;
+  scrollBottom();
+}
+
+/* ---------------- Wiring ---------------- */
+$("send").addEventListener("click", function(){ handleAnswer($("input").value); });
+$("input").addEventListener("keydown", function(e){
+  if(e.key==="Enter" && !e.shiftKey){ e.preventDefault(); handleAnswer($("input").value); }
+});
+$("againBtn").addEventListener("click", function(){ showScreen("modeScreen"); });
+
+renderModes();
+</script>
+</body>
+</html>
